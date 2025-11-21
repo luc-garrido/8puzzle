@@ -1,24 +1,21 @@
-// puzzle.h
-#include <assert.h>
+#ifndef PUZZLE_H
 #define PUZZLE_H
-#include "estruturas.h"
 
-typedef struct estado {
-    int tab[9];
-    int profundidade;
-    int custo;
-    struct estado* pai;
-} Estado;
+#include "estruturas.h" 
 
-// Funções essenciais do puzzle
-int ehObjetivo(Estado* e);
-void imprimirPuzzle(Estado* e);
-int estadosIguais(Estado* a, Estado* b);
+// Funções Básicas
+Estado* criarEstadoInicial();
+void imprimirEstado(Estado *e);
+int movimentar(Estado *e, char direcao);
+int ehEstadoFinal(Estado *e);
 
-// Sucessores
-int encontrarPosVazio(Estado* e);
-int gerarSucessores(Estado* e, Estado sucessores[4]);
+// Funções de Manipulação de Estado
+Estado* clonarEstado(Estado *original);
+void gerarFilhos(Container *c, Estado *atual);
+void embaralhar(Estado *e, int n);
 
-// Heurísticas para A*
-int heuristicaManhattan(Estado* e);
-int heuristicaPecasFora(Estado* e);
+// --- FUNÇÕES QUE FALTAVAM ---
+int estadosSaoIguais(Estado *a, Estado *b); // <--- O ERRO ERA A FALTA DISSO
+int calcularHeuristica(Estado *e);          // <--- Necessário para o A*
+
+#endif

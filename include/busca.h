@@ -1,11 +1,11 @@
-// busca.h
-#include <assert.h>
-#include "puzzle.h"
-#include "estruturas.h"
+#ifndef BUSCA_H
+#define BUSCA_H
 
-void buscaLargura(Estado* inicial);
-void buscaProfundidade(Estado* inicial, int limite);
-void buscaIDDFS(Estado* inicial);
-void buscaAEstrela(Estado* inicial);
+// --- IMPORTANTE: Precisamos incluir estruturas.h aqui ---
+#include "estruturas.h" 
 
-void mostrarSolucao(Estado* objetivo);
+// Protótipo da função (Apenas declaração, sem {})
+// tipoAlgoritmo: 1=Largura, 2=Profundidade
+void realizarBusca(Estado *inicial, int tipoAlgoritmo);
+
+#endif

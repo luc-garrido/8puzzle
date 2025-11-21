@@ -1,61 +1,44 @@
-// estruturas.h
-#include <assert.h>
-#include "puzzle.h"
+#ifndef ESTRUTURAS_H
+#define ESTRUTURAS_H
+#include "estruturas.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-// Fila
-typedef struct nodo_fila {
-    Estado* estado;
-    struct nodo_fila* prox;
-} NodoFila;
+#define N 3
 
-typedef struct fila {
-    NodoFila* ini;
-    NodoFila* fim;
-} Fila;
+// 1. Definimos os nomes antecipadamente (Forward Declaration)
+typedef struct Estado Estado;
+typedef struct No No;
+typedef struct Container Container;
 
-// Pilha
-typedef struct nodo_pilha {
-    Estado* estado;
-    struct nodo_pilha* prox;
-} NodoPilha;
+// 2. Definimos a Struct Estado
+struct Estado {
+    int tabuleiro[N][N];
+    int vazioX, vazioY;
+    int g;
+    int f; // F = G + H (Adicionado para o A*)
+    int h;
+    struct Estado *pai;
+};
 
-typedef struct pilha {
-    NodoPilha* topo;
-} Pilha;
+// 3. Definimos o Nó
+struct No {
+    Estado *estado;
+    struct No *prox;
+};
 
-// Lista para A* (ordenada por custo)
-typedef struct nodo_lista {
-    Estado* estado;
-    int prioridade;
-    struct nodo_lista* prox;
-} NodoLista;
+// 4. Definimos o Container
+struct Container {
+    No *inicio;
+    No *fim;
+    int tamanho;
+    int tipo; 
+};
 
-typedef struct lista {
-    NodoLista* ini;
-} Lista;
+// 5. Protótipos das funções
+Container* criarContainer(int tipo);
+void adicionarEstado(Container *c, Estado *e);
+Estado* removerEstado(Container *c);
+int containerVazio(Container *c);
 
-
-// Criação
-Fila* criarFila();
-Pilha* criarPilha();
-Lista* criarLista();
-
-// Operações
-void filaInserir(Fila* f, Estado* e);
-Estado* filaRemover(Fila* f);
-int filaVazia(Fila* f);
-
-void pilhaInserir(Pilha* p, Estado* e);
-Estado* pilhaRemover(Pilha* p);
-int pilhaVazia(Pilha* p);
-
-void listaInserir(Lista* l, Estado* e, int prioridade);
-Estado* listaRemover(Lista* l);
-int listaVazia(Lista* l);
-
-
-// Interface genérica para o laço universal
-// 1 = fila   2 = pilha   3 = lista ordenada
-void adicionar(void* estrutura, int tipo, Estado* e, int prioridade);
-Estado* remover(void* estrutura, int tipo);
-int estruturaVazia(void* estrutura, int tipo);
+#endif

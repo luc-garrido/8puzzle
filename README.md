@@ -1,5 +1,6 @@
 # 🧩 8-Puzzle Solver (Implementação em C)
 Este repositório contém a implementação de um simulador e solucionador para o problema do **8-Puzzle**, desenvolvido como parte do Projeto Integrador (PI) 2025 do curso de Ciência de Dados e Inteligência Artificial.
+
 O projeto foi estruturado de forma modular, separando interfaces, implementações e estruturas de dados, cumprindo os requisitos de utilização de **Listas**, **Pilhas**, **Filas** e algoritmos de busca não-recursivos (**BFS**, **IDDFS**, **A***).
 ---
 ## 📂 Arquitetura do Projeto
@@ -15,7 +16,7 @@ O código segue o padrão de separação entre cabeçalhos (`include/`) e fonte 
    │   ├── puzzle.c       # Regras de negócio do jogo (Heurísticas, Movimentos)
    │   ├── busca.c        # Algoritmos de IA e Visualização de Solução
    │   └── main.c         # Entry point, CLI e Sistema de Gamificação
-   │  └── README.md
+   │   └── README.md
 ```
 
 🛠️ Documentação Técnica dos Módulos

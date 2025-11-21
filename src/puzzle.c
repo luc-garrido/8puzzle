@@ -1,94 +1,183 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <time.h>
+#include <math.h> // Necessário para abs() na heurística
 #include "puzzle.h"
 
-// Imprime o estado 3x3
-void imprimirEstado(Estado e) {
-    for (int i = 0; i < 9; i++) {
-        if (e.tab[i] == 0) printf("   ");
-        else printf(" %d ", e.tab[i]);
-        if ((i+1) % 3 == 0) printf("\n");
+// --- IMPLEMENTAÇÃO DAS FUNÇÕES DO PUZZLE ---
+
+Estado* criarEstadoInicial() {
+    Estado *novo = (Estado*) malloc(sizeof(Estado));
+    // Estado resolvido como base
+    int modelo[3][3] = {{1,2,3},{4,5,6},{7,8,0}};
+    
+    for(int i=0; i<3; i++)
+        for(int j=0; j<3; j++)
+            novo->tabuleiro[i][j] = modelo[i][j];
+            
+    novo->vazioX = 2; 
+    novo->vazioY = 2;
+    novo->g = 0; 
+    novo->h = 0; 
+    novo->f = 0;
+    novo->pai = NULL;
+    return novo;
+}
+
+void imprimirEstado(Estado *e) {
+    if(!e) return;
+    
+    printf("\n");
+    printf("   +---+---+---+\n");
+    
+    for(int i=0; i<3; i++){
+        printf("   |"); 
+        for(int j=0; j<3; j++){
+            if(e->tabuleiro[i][j] == 0) 
+                printf(" . "); 
+            else 
+                printf(" %d ", e->tabuleiro[i][j]);
+            
+            printf("|");
+        }
+        printf("\n");
+        printf("   +---+---+---+\n");
     }
     printf("\n");
 }
 
-// Lê estado inicial do usuário
-Estado lerEstadoInicial() {
-    Estado e;
-    printf("Digite o estado inicial (use 0 para o espaço vazio):\n");
-    for (int i = 0; i < 9; i++) scanf("%d", &e.tab[i]);
-    return e;
-}
+int movimentar(Estado *e, char direcao) {
+    int novaLinha = e->vazioX;
+    int novaColuna = e->vazioY;
 
-// Encontra índice do zero
-static int encontrarZero(Estado e) {
-    for (int i = 0; i < 9; i++) if (e.tab[i] == 0) return i;
-    return -1;
-}
-
-// Gera estados vizinhos
-int gerarSucessores(Estado atual, Estado sucessores[4]) {
-    int zero = encontrarZero(atual);
-    int linha = zero / 3;
-    int coluna = zero % 3;
-    int count = 0;
-
-    int movimentos[4][2] = {
-        {linha - 1, coluna},
-        {linha + 1, coluna},
-        {linha, coluna - 1},
-        {linha, coluna + 1}
-    };
-
-    for (int m = 0; m < 4; m++) {
-        int nl = movimentos[m][0];
-        int nc = movimentos[m][1];
-
-        if (nl >= 0 && nl < 3 && nc >= 0 && nc < 3) {
-            Estado novo = atual;
-            int newZero = nl * 3 + nc;
-
-            int temp = novo.tab[newZero];
-            novo.tab[newZero] = 0;
-            novo.tab[zero] = temp;
-
-            sucessores[count++] = novo;
-        }
+    switch(direcao) {
+        case 'w': case 'W': novaLinha--; break;
+        case 's': case 'S': novaLinha++; break;
+        case 'a': case 'A': novaColuna--; break;
+        case 'd': case 'D': novaColuna++; break;
+        default: return 0;
     }
 
-    return count;
-}
+    // Verifica limites do tabuleiro
+    if (novaLinha < 0 || novaLinha > 2 || novaColuna < 0 || novaColuna > 2) return 0;
 
-// Checa se é estado final
-int ehFinal(Estado e) {
-    int final[9] = {1,2,3,4,5,6,7,8,0};
-    for (int i = 0; i < 9; i++) if (e.tab[i] != final[i]) return 0;
+    // Troca as peças
+    int valorPeca = e->tabuleiro[novaLinha][novaColuna];
+    e->tabuleiro[e->vazioX][e->vazioY] = valorPeca;
+    e->tabuleiro[novaLinha][novaColuna] = 0;
+    
+    // Atualiza coordenadas do vazio
+    e->vazioX = novaLinha; 
+    e->vazioY = novaColuna;
+
     return 1;
 }
 
-// Jogo manual simples
-void jogarPuzzle(Estado inicial) {
-    Estado atual = inicial;
+int ehEstadoFinal(Estado *e) {
+    if (!e) return 0;
+    int objetivo[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
+    
+    for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++)
+            if (e->tabuleiro[i][j] != objetivo[i][j]) return 0;
+            
+    return 1;
+}
 
-    while (!ehFinal(atual)) {
-        imprimirEstado(atual);
-        printf("Escolha um movimento:\n");
-        printf("1 - Cima\n2 - Baixo\n3 - Esquerda\n4 - Direita\n");
+Estado* clonarEstado(Estado *original) {
+    Estado *novo = (Estado*) malloc(sizeof(Estado));
+    for(int i=0; i<3; i++)
+        for(int j=0; j<3; j++)
+            novo->tabuleiro[i][j] = original->tabuleiro[i][j];
+            
+    novo->vazioX = original->vazioX; 
+    novo->vazioY = original->vazioY;
+    novo->g = original->g; 
+    novo->h = 0; 
+    novo->f = 0;
+    novo->pai = original;
+    return novo;
+}
 
-        int mov;
-        scanf("%d", &mov);
+int estadosSaoIguais(Estado *a, Estado *b) {
+    if (!a || !b) return 0;
+    for(int i=0; i<3; i++)
+        for(int j=0; j<3; j++)
+            if(a->tabuleiro[i][j] != b->tabuleiro[i][j]) return 0;
+    return 1;
+}
 
-        Estado suc[4];
-        int q = gerarSucessores(atual, suc);
+// --- HEURÍSTICA MANHATTAN (PARA O A*) ---
+int calcularHeuristica(Estado *e) {
+    int h = 0;
+    // Posição correta de cada número (0 a 8)
+    // objetivoPos[1] = {0,0} significa que o numero 1 deve estar na linha 0 col 0
+    int objetivoPos[9][2] = {
+        {2, 2}, // 0
+        {0, 0}, // 1
+        {0, 1}, // 2
+        {0, 2}, // 3
+        {1, 0}, // 4
+        {1, 1}, // 5
+        {1, 2}, // 6
+        {2, 0}, // 7
+        {2, 1}  // 8
+    };
 
-        if (mov < 1 || mov > q) {
-            printf("Movimento inválido!\n");
-            continue;
+    for(int i=0; i<3; i++) {
+        for(int j=0; j<3; j++) {
+            int valor = e->tabuleiro[i][j];
+            if (valor != 0) { 
+                int linhaAlvo = objetivoPos[valor][0];
+                int colAlvo = objetivoPos[valor][1];
+                // Distância = diferença absoluta das linhas + diferença absoluta das colunas
+                h += abs(i - linhaAlvo) + abs(j - colAlvo);
+            }
         }
-
-        atual = suc[mov - 1];
     }
+    return h;
+}
 
-    printf("Parabéns! Você resolveu!\n");
+void gerarFilhos(Container *c, Estado *atual) {
+    char movimentos[] = {'w', 's', 'a', 'd'};
+    
+    for(int i=0; i<4; i++) {
+        Estado *filho = clonarEstado(atual);
+        
+        if (movimentar(filho, movimentos[i])) {
+            filho->g++; 
+            
+            // Otimização: Não volta pro pai imediato
+            if (atual->pai != NULL) {
+                if (estadosSaoIguais(filho, atual->pai)) {
+                    free(filho); 
+                    continue;
+                }
+            }
+            
+            // Se for A* (Tipo 3), precisamos do H e F, mas quem chama é o busca.c
+            // Porém, se deixarmos aqui não faz mal.
+            // O importante é que ADICIONAR ESTADO não está implementado aqui, apenas chamado.
+            adicionarEstado(c, filho);
+        } else {
+            free(filho);
+        }
+    }
+}
+
+void embaralhar(Estado *e, int n) {
+    srand(time(NULL));
+    char direcoes[] = {'w', 's', 'a', 'd'};
+    
+    // Reseta para resolvido antes de embaralhar
+    int resolvido[3][3] = {{1,2,3},{4,5,6},{7,8,0}};
+    for(int i=0; i<3; i++) for(int j=0; j<3; j++) e->tabuleiro[i][j] = resolvido[i][j];
+    e->vazioX = 2; e->vazioY = 2; e->g = 0; e->pai = NULL;
+    
+    int movimentosFeitos = 0;
+    while (movimentosFeitos < n) {
+        if (movimentar(e, direcoes[rand() % 4])) {
+            movimentosFeitos++;
+        }
+    }
 }

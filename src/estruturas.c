@@ -1,186 +1,97 @@
-// estruturas.c
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "estruturas.h"
 
-// ==========================================================
-// Fila
-// ==========================================================
-
-Fila* criarFila() {
-    Fila* f = (Fila*) malloc(sizeof(Fila));
-    f->ini = NULL;
-    f->fim = NULL;
-    return f;
+// Cria o container (Pode ser PILHA=1 ou FILA=2)
+Container* criarContainer(int tipo) {
+    Container *c = (Container*) malloc(sizeof(Container));
+    if (c) {
+        c->inicio = NULL;
+        c->fim = NULL;
+        c->tamanho = 0;
+        c->tipo = tipo; // 1=Pilha, 2=Fila
+    }
+    return c;
 }
 
-void filaInserir(Fila* f, Estado* e) {
-    NodoFila* novo = (NodoFila*) malloc(sizeof(NodoFila));
+// Verifica se está vazio
+int containerVazio(Container *c) {
+    return (c == NULL || c->inicio == NULL);
+}
+
+// Adiciona um estado na estrutura
+// A MÁGICA ACONTECE AQUI:
+// Se for PILHA: Adiciona no INÍCIO (LIFO)
+// Se for FILA:  Adiciona no FIM (FIFO)
+// Substitua a função adicionarEstado no src/estruturas.c
+
+void adicionarEstado(Container *c, Estado *e) {
+    if (!c) return;
+
+    No *novo = (No*) malloc(sizeof(No));
     novo->estado = e;
     novo->prox = NULL;
 
-    if (f->fim == NULL) {
-        f->ini = novo;
-        f->fim = novo;
+    if (c->tipo == 1) { 
+        // --- TIPO 1: PILHA (LIFO) ---
+        novo->prox = c->inicio;
+        c->inicio = novo;
+        if (c->fim == NULL) c->fim = novo;
+
+    } else if (c->tipo == 2) { 
+        // --- TIPO 2: FILA (FIFO) ---
+        if (c->fim != NULL) {
+            c->fim->prox = novo;
+        }
+        c->fim = novo;
+        if (c->inicio == NULL) c->inicio = novo;
+
     } else {
-        f->fim->prox = novo;
-        f->fim = novo;
+        // --- TIPO 3: FILA DE PRIORIDADE (Ordenada por menor F para o A*) ---
+        
+        // Caso 1: Lista vazia ou o novo é menor que o primeiro
+        if (c->inicio == NULL || e->f < c->inicio->estado->f) {
+            novo->prox = c->inicio;
+            c->inicio = novo;
+            if (c->fim == NULL) c->fim = novo; // Se era vazia, ajusta o fim
+        } else {
+            // Caso 2: Procura a posição correta no meio ou fim
+            No *atual = c->inicio;
+            // Avança enquanto houver próximo e o F do próximo for menor que o F do novo
+            while (atual->prox != NULL && atual->prox->estado->f <= e->f) {
+                atual = atual->prox;
+            }
+            // Insere depois do 'atual'
+            novo->prox = atual->prox;
+            atual->prox = novo;
+            
+            // Se inseriu no final, atualiza o ponteiro fim
+            if (novo->prox == NULL) {
+                c->fim = novo;
+            }
+        }
     }
+    c->tamanho++;
 }
 
-Estado* filaRemover(Fila* f) {
-    if (f->ini == NULL) return NULL;
+// Remove um estado da estrutura
+// Para facilitar o laço genérico, SEMPRE removemos do INÍCIO.
+// Na Pilha, removemos quem acabou de entrar (Topo).
+// Na Fila, removemos quem estava esperando há mais tempo (Primeiro).
+Estado* removerEstado(Container *c) {
+    if (containerVazio(c)) return NULL;
 
-    NodoFila* aux = f->ini;
-    Estado* e = aux->estado;
+    No *temp = c->inicio;
+    Estado *e = temp->estado;
 
-    f->ini = aux->prox;
-    if (f->ini == NULL) {
-        f->fim = NULL;
+    c->inicio = temp->prox; // Avança o início
+    
+    if (c->inicio == NULL) {
+        c->fim = NULL; // Se esvaziou, zera o fim também
     }
 
-    free(aux);
+    free(temp); // Libera o NÓ, mas NÃO o estado (pois vamos usá-lo)
+    c->tamanho--;
+    
     return e;
-}
-
-int filaVazia(Fila* f) {
-    return (f->ini == NULL);
-}
-
-
-
-// ==========================================================
-// Pilha
-// ==========================================================
-
-Pilha* criarPilha() {
-    Pilha* p = (Pilha*) malloc(sizeof(Pilha));
-    p->topo = NULL;
-    return p;
-}
-
-void pilhaInserir(Pilha* p, Estado* e) {
-    NodoPilha* novo = (NodoPilha*) malloc(sizeof(NodoPilha));
-    novo->estado = e;
-    novo->prox = p->topo;
-    p->topo = novo;
-}
-
-Estado* pilhaRemover(Pilha* p) {
-    if (p->topo == NULL) return NULL;
-
-    NodoPilha* aux = p->topo;
-    Estado* e = aux->estado;
-
-    p->topo = aux->prox;
-    free(aux);
-
-    return e;
-}
-
-int pilhaVazia(Pilha* p) {
-    return (p->topo == NULL);
-}
-
-
-
-// ==========================================================
-// Lista Ordenada (para A*)
-// ==========================================================
-
-Lista* criarLista() {
-    Lista* l = (Lista*) malloc(sizeof(Lista));
-    l->ini = NULL;
-    return l;
-}
-
-void listaInserir(Lista* l, Estado* e, int prioridade) {
-    NodoLista* novo = (NodoLista*) malloc(sizeof(NodoLista));
-    novo->estado = e;
-    novo->prioridade = prioridade;
-    novo->prox = NULL;
-
-    if (l->ini == NULL || prioridade < l->ini->prioridade) {
-        novo->prox = l->ini;
-        l->ini = novo;
-        return;
-    }
-
-    NodoLista* atual = l->ini;
-
-    while (atual->prox != NULL && atual->prox->prioridade <= prioridade) {
-        atual = atual->prox;
-    }
-
-    novo->prox = atual->prox;
-    atual->prox = novo;
-}
-
-Estado* listaRemover(Lista* l) {
-    if (l->ini == NULL) return NULL;
-
-    NodoLista* aux = l->ini;
-    Estado* e = aux->estado;
-
-    l->ini = aux->prox;
-    free(aux);
-
-    return e;
-}
-
-int listaVazia(Lista* l) {
-    return (l->ini == NULL);
-}
-
-
-
-// ==========================================================
-// Interface Genérica — usada pelo laço universal
-// ==========================================================
-
-void adicionar(void* estrutura, int tipo, Estado* e, int prioridade) {
-    assert(estrutura != NULL);
-
-    if (tipo == 1) {
-        filaInserir((Fila*) estrutura, e);
-    }
-    else if (tipo == 2) {
-        pilhaInserir((Pilha*) estrutura, e);
-    }
-    else if (tipo == 3) {
-        listaInserir((Lista*) estrutura, e, prioridade);
-    }
-}
-
-Estado* remover(void* estrutura, int tipo) {
-    assert(estrutura != NULL);
-
-    if (tipo == 1) {
-        return filaRemover((Fila*) estrutura);
-    }
-    else if (tipo == 2) {
-        return pilhaRemover((Pilha*) estrutura);
-    }
-    else if (tipo == 3) {
-        return listaRemover((Lista*) estrutura);
-    }
-
-    return NULL;
-}
-
-int estruturaVazia(void* estrutura, int tipo) {
-    assert(estrutura != NULL);
-
-    if (tipo == 1) {
-        return filaVazia((Fila*) estrutura);
-    }
-    else if (tipo == 2) {
-        return pilhaVazia((Pilha*) estrutura);
-    }
-    else if (tipo == 3) {
-        return listaVazia((Lista*) estrutura);
-    }
-
-    return 1;
 }

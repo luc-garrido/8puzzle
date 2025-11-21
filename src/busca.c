@@ -1,168 +1,131 @@
-// busca.c
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "busca.h"
+#include "puzzle.h"
 
-// ==========================================================
-// LAÇO UNIVERSAL (OBRIGATÓRIO PELO TRABALHO)
-// tipoEstrutura:
-//    1 = fila (BFS)
-//    2 = pilha (DFS)
-//    3 = lista ordenada (A*)
-// ==========================================================
+void imprimirPecaSimples(int valor) {
+    if (valor == 0) printf(" . ");
+    else printf(" %d ", valor);
+}
 
-void loopBusca(void* estrutura, int tipoEstrutura, Estado* inicial, int limite) {
-    adicionar(estrutura, tipoEstrutura, inicial, inicial->custo);
-
-    while (!estruturaVazia(estrutura, tipoEstrutura)) {
-
-        Estado* atual = remover(estrutura, tipoEstrutura);
-
-        // Se estiver usando limite (DFS limitada)
-        if (limite != -1 && atual->profundidade > limite) {
-            continue;
-        }
-
-        if (ehObjetivo(atual)) {
-            mostrarSolucao(atual);
-            return;
-        }
-
-        Estado filhos[4];
-        int total = gerarSucessores(atual, filhos);
-
-        for (int i = 0; i < total; i++) {
-            Estado* novo = malloc(sizeof(Estado));
-            *novo = filhos[i];
-            novo->pai = atual;
-
-            // prioridade só importa no A*
-            int prioridade = novo->custo;
-
-            adicionar(estrutura, tipoEstrutura, novo, prioridade);
-        }
+void imprimirCaminhoLadoALado(Estado *final) {
+    int profundidade = final->g;
+    Estado **historico = (Estado**) malloc(sizeof(Estado*) * (profundidade + 1));
+    
+    Estado *temp = final;
+    for(int i = profundidade; i >= 0; i--) {
+        historico[i] = temp;
+        temp = temp->pai;
     }
 
-    printf("Sem solução.\n");
-}
-
-// ==========================================================
-// BFS - Busca em Largura
-// ==========================================================
-
-void buscaLargura(Estado* inicial) {
-    Fila* f = criarFila();
-    loopBusca(f, 1, inicial, -1); // -1 = sem limite
-}
-
-// ==========================================================
-// DFS Limitada (sem recursão!)
-// ==========================================================
-
-void buscaProfundidade(Estado* inicial, int limite) {
-    Pilha* p = criarPilha();
-    loopBusca(p, 2, inicial, limite);
-}
-
-// ==========================================================
-// IDDFS - Busca em Profundidade Limitada Iterativa
-// ==========================================================
-
-void buscaIDDFS(Estado* inicial) {
-    int limite = 0;
-    int encontrado = 0;
-
-    while (!encontrado && limite <= 50) { // 50 evita loop infinito
-        Pilha* p = criarPilha();
-        printf("\n--- Tentando limite %d ---\n", limite);
-
-        adicionar(p, 2, inicial, inicial->custo);
-
-        while (!pilhaVazia(p)) {
-            Estado* atual = pilhaRemover(p);
-
-            if (ehObjetivo(atual)) {
-                mostrarSolucao(atual);
-                return;
+    printf("\n=== CAMINHO DA SOLUCAO (%d Passos) ===\n", profundidade);
+    int blocos = 5;
+    for (int i = 0; i <= profundidade; i += blocos) {
+        printf("\n");
+        for (int k = i; k < i + blocos && k <= profundidade; k++) {
+            printf("Passo %-2d     ", k); 
+        }
+        printf("\n");
+        for (int linha = 0; linha < 3; linha++) {
+            for (int k = i; k < i + blocos && k <= profundidade; k++) {
+                Estado *e = historico[k];
+                printf("[");
+                imprimirPecaSimples(e->tabuleiro[linha][0]);
+                imprimirPecaSimples(e->tabuleiro[linha][1]);
+                imprimirPecaSimples(e->tabuleiro[linha][2]);
+                printf("]  "); 
             }
+            printf("\n");
+        }
+    }
+    free(historico);
+}
 
-            if (atual->profundidade < limite) {
-                Estado filhos[4];
-                int total = gerarSucessores(atual, filhos);
+// tipoEstrutura: 1=Pilha, 2=Fila, 3=Fila Prioridade (A*)
+int executarBusca(Estado *inicial, int tipoEstrutura, int limiteProfundidade, int *totalVisitados) {
+    Container *c = criarContainer(tipoEstrutura);
+    
+    Estado *primeiro = clonarEstado(inicial);
+    // Se for A*, precisamos calcular H e F do estado inicial
+    if (tipoEstrutura == 3) {
+        primeiro->h = calcularHeuristica(primeiro);
+        primeiro->f = primeiro->g + primeiro->h;
+    }
+    adicionarEstado(c, primeiro);
+    
+    while (!containerVazio(c)) {
+        Estado *atual = removerEstado(c);
+        (*totalVisitados)++;
+        
+        if (ehEstadoFinal(atual)) {
+            system("cls");
+            char *nomeAlgo;
+            if (tipoEstrutura == 1) nomeAlgo = "Profundidade Iterativa (IDDFS)";
+            else if (tipoEstrutura == 2) nomeAlgo = "Largura (BFS)";
+            else nomeAlgo = "A* (A-Star com Heuristica Manhattan)";
 
-                for (int i = 0; i < total; i++) {
-                    Estado* novo = malloc(sizeof(Estado));
-                    *novo = filhos[i];
-                    novo->pai = atual;
+            printf("\n=== [SUCESSO] PUZZLE RESOLVIDO! ===\n");
+            printf("Algoritmo...............: %s\n", nomeAlgo);
+            printf("Estados visitados.......: %d\n", *totalVisitados);
+            printf("Profundidade............: %d passos\n", atual->g);
+            
+            imprimirCaminhoLadoALado(atual);
+            return 1;
+        }
+        
+        if (atual->g < limiteProfundidade) { 
+            // GERAÇÃO DE FILHOS ADAPTADA PARA A*
+            char movimentos[] = {'w', 's', 'a', 'd'};
+            for(int i=0; i<4; i++) {
+                Estado *filho = clonarEstado(atual);
+                if (movimentar(filho, movimentos[i])) {
+                    filho->g++; 
+                    // Otimização: Não volta pro pai
+                    if (atual->pai != NULL && estadosSaoIguais(filho, atual->pai)) {
+                        free(filho); continue;
+                    }
 
-                    pilhaInserir(p, novo);
+                    // SE FOR A*, CALCULA H e F
+                    if (tipoEstrutura == 3) {
+                        filho->h = calcularHeuristica(filho);
+                        filho->f = filho->g + filho->h;
+                    }
+                    
+                    // Adiciona (a estrutura sabe como ordenar se for tipo 3)
+                    adicionarEstado(c, filho);
+                } else {
+                    free(filho);
                 }
             }
+        } else {
+            free(atual); 
         }
-
-        limite++;
     }
-
-    printf("Sem solução.\n");
+    return 0;
 }
 
-// ==========================================================
-// A* - Algoritmo A Estrela
-// ==========================================================
+void realizarBusca(Estado *inicial, int tipoAlgoritmo) {
+    system("cls"); 
+    int visitados = 0;
 
-void buscaAEstrela(Estado* inicial) {
-    Lista* l = criarLista();
-
-    inicial->custo = heuristicaManhattan(inicial);
-
-    adicionar(l, 3, inicial, inicial->custo);
-
-    while (!listaVazia(l)) {
-        Estado* atual = listaRemover(l);
-
-        if (ehObjetivo(atual)) {
-            mostrarSolucao(atual);
-            return;
+    if (tipoAlgoritmo == 1) {
+        printf("Iniciando Busca em LARGURA (BFS)...\n");
+        executarBusca(inicial, 2, 50, &visitados); // Tipo 2 = Fila
+    } 
+    else if (tipoAlgoritmo == 2) {
+        printf("Iniciando Busca A* (A-Star)...\n");
+        // Tipo 3 = Fila Prioridade. Limite alto pois A* é eficiente.
+        executarBusca(inicial, 3, 60, &visitados); 
+    }
+    else {
+        printf("Iniciando Busca em PROFUNDIDADE LIMITADA ITERATIVA...\n");
+        int limiteMaximo = 50;
+        int achou = 0;
+        for (int limite = 1; limite <= limiteMaximo; limite++) {
+            printf("Analisando profundidade: %d (Visitados: %d)...\r", limite, visitados);
+            achou = executarBusca(inicial, 1, limite, &visitados); // Tipo 1 = Pilha
+            if (achou) break;
         }
-
-        Estado filhos[4];
-        int total = gerarSucessores(atual, filhos);
-
-        for (int i = 0; i < total; i++) {
-            Estado* novo = malloc(sizeof(Estado));
-            *novo = filhos[i];
-            novo->pai = atual;
-
-            int h = heuristicaManhattan(novo);
-            novo->custo = novo->profundidade + h;
-
-            listaInserir(l, novo, novo->custo);
-        }
+        if (!achou) printf("\nLimite maximo atingido sem solucao.\n");
     }
-
-    printf("Sem solução.\n");
-}
-
-// ==========================================================
-// Mostrar Solução (caminho do início ao objetivo)
-// ==========================================================
-
-void mostrarSolucao(Estado* objetivo) {
-    Estado* caminho[200];
-    int tam = 0;
-
-    Estado* atual = objetivo;
-    while (atual != NULL && tam < 200) {
-        caminho[tam++] = atual;
-        atual = atual->pai;
-    }
-
-    // Imprime do início ao fim
-    for (int i = tam - 1; i >= 0; i--) {
-        imprimirPuzzle(caminho[i]);
-        printf("\n");
-    }
-
-    printf("Total de passos: %d\n", tam - 1);
 }

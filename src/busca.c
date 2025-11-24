@@ -3,12 +3,16 @@
 #include "busca.h"
 #include "puzzle.h"
 
-void imprimirPecaSimples(int valor) {
-    if (valor == 0) printf(" . ");
-    else printf(" %d ", valor);
+void imprimirPecaSimples(int valor) {//imprime uma peca sem bordas
+    if (valor == 0) {
+        printf(" . ");
+    }
+    else {
+        printf(" %d ", valor);
+    }
 }
 
-void imprimirCaminhoLadoALado(Estado *final) {
+void imprimirCaminhoLadoALado(Estado *final) {//imprime o caminho da solucao lado a lado
     int profundidade = final->g;
     Estado **historico = (Estado**) malloc(sizeof(Estado*) * (profundidade + 1));
     Estado *temp = final;
@@ -45,7 +49,7 @@ int executarBusca(Estado *inicial, int tipoEstrutura, int limiteProfundidade, in
     Container *c = criarContainer(tipoEstrutura);
     Estado *primeiro = clonarEstado(inicial);
 
-    if (tipoEstrutura == 3) {
+    if (tipoEstrutura == 3) {//A*
         primeiro->h = calcularHeuristica(primeiro);
         primeiro->f = primeiro->g + primeiro->h;
     }
@@ -59,10 +63,15 @@ int executarBusca(Estado *inicial, int tipoEstrutura, int limiteProfundidade, in
         if (ehEstadoFinal(atual)) {
             system("cls");
             char *nomeAlgo;
-            if (tipoEstrutura == 1) nomeAlgo = "Profundidade Iterativa (IDDFS)";
-            else if (tipoEstrutura == 2) nomeAlgo = "Largura (BFS)";
-            else nomeAlgo = "A* (A-Star com Heuristica Manhattan)";
-
+            if (tipoEstrutura == 1){
+                nomeAlgo = "Profundidade Iterativa (IDDFS)";
+            }
+            else if (tipoEstrutura == 2) {
+                nomeAlgo = "Largura (BFS)";
+            }
+            else {
+                nomeAlgo = "A* (A-Star com Heuristica Manhattan)";
+            }
             printf("\n=== [SUCESSO] PUZZLE RESOLVIDO! ===\n");
             printf("Algoritmo...............: %s\n", nomeAlgo);
             printf("Estados visitados.......: %d\n", *totalVisitados);
@@ -124,6 +133,8 @@ void realizarBusca(Estado *inicial, int tipoAlgoritmo) {
             achou = executarBusca(inicial, 1, limite, &visitados);
             if (achou) break;
         }
-        if (!achou) printf("\nLimite maximo atingido sem solucao.\n");
+        if (!achou) {
+            printf("\nLimite maximo atingido sem solucao.\n");
+        }
     }
 }

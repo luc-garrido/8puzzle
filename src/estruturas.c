@@ -18,8 +18,7 @@ int containerVazio(Container *c) {
 }
 
 void adicionarEstado(Container *c, Estado *e) {
-    if (!c)
-    {
+    if (!c) {
         return;//pare tudo e saia para não dar erro fatal
     }
 
@@ -31,7 +30,7 @@ void adicionarEstado(Container *c, Estado *e) {
     if (c->tipo == 1) {
         novo->prox = c->inicio;//insere no inicio (pilha)
         c->inicio = novo;
-        if (c->fim == NULL){
+        if (c->fim == NULL) {
             c->fim = novo;
         }
     }
@@ -47,45 +46,45 @@ void adicionarEstado(Container *c, Estado *e) {
     else {
         if (c->inicio == NULL || e->f < c->inicio->estado->f) {
             novo->prox = c->inicio;
-            c->inicio = novo;
-            if (c->fim == NULL){
-                c->fim = novo;
+            c->inicio = novo;//insere no início
+            if (c->fim == NULL){//se for o primeiro
+                c->fim = novo;//seta o fim
             }//vira o primeiro
         }
         else {
-            No *atual = c->inicio;
+            No *atual = c->inicio;//começa do início
 
             while (atual->prox != NULL && atual->prox->estado->f <= e->f) {
-                atual = atual->prox;
+                atual = atual->prox;//anda até achar o lugar correto
             }//f menor = mais urgente
 
             novo->prox = atual->prox;//eu aponto pro cara ruim
             atual->prox = novo;//o cara bom aponta pra mim
 
-            if (novo->prox == NULL) {
-                c->fim = novo;
+            if (novo->prox == NULL) {//se for o último
+                c->fim = novo;//atualiza o fim se for o último
             }
         }
     }
-    c->tamanho++;
+    c->tamanho++;//incrementa o tamanho
 }
 
-Estado* removerEstado(Container *c) {
+Estado* removerEstado(Container *c) {//remove o estado conforme a estrutura
     if (containerVazio(c)){
-        return NULL;
+        return NULL;//nada pra remover, se vazio
     }
 
-    No *temp = c->inicio;
-    Estado *e = temp->estado;
+    No *temp = c->inicio;//pega o nó do inicio
+    Estado *e = temp->estado;//pega o estado do nó
 
-    c->inicio = temp->prox;
+    c->inicio = temp->prox;//avança o inicio para o próximo nó
     
-    if (c->inicio == NULL) {
-        c->fim = NULL;
+    if (c->inicio == NULL) {//se a lista ficou vazia
+        c->fim = NULL;//atualiza o fim também
     }
 
-    free(temp);
-    c->tamanho--;
+    free(temp);//libera o nó removido
+    c->tamanho--;//decrementa o tamanho
     
-    return e;
+    return e;//retorna o estado removido
 }

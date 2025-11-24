@@ -6,12 +6,14 @@
 
 
 Estado* criarEstadoInicial() {
-    Estado *novo = (Estado*) malloc(sizeof(Estado));
+    Estado *novo = (Estado*) malloc(sizeof(Estado));//aloca memoria para o estado
     int modelo[3][3] = {{1,2,3},{4,5,6},{7,8,0}};
     
-    for(int i=0; i<3; i++)
-        for(int j=0; j<3; j++)
+    for(int i=0; i<3; i++){
+        for(int j=0; j<3; j++) {
             novo->tabuleiro[i][j] = modelo[i][j];
+        }
+    }
             
     novo->vazioX = 2; 
     novo->vazioY = 2;
@@ -23,19 +25,22 @@ Estado* criarEstadoInicial() {
 }
 
 void imprimirEstado(Estado *e) {
-    if(!e) return;
-    
+    if(!e){//verifica se o estado e nulo
+        return;
+    }
+
     printf("\n");
     printf("   +---+---+---+\n");
     
     for(int i=0; i<3; i++){
         printf("   |"); 
         for(int j=0; j<3; j++){
-            if(e->tabuleiro[i][j] == 0) 
-                printf(" . "); 
-            else 
+            if(e->tabuleiro[i][j] == 0){
+                printf(" . ");
+            }
+            else { 
                 printf(" %d ", e->tabuleiro[i][j]);
-            
+            }
             printf("|");
         }
         printf("\n");
@@ -48,16 +53,17 @@ int movimentar(Estado *e, char direcao) {
     int novaLinha = e->vazioX;
     int novaColuna = e->vazioY;
 
-    switch(direcao) {
-        case 'w': case 'W': novaLinha--; break;
-        case 's': case 'S': novaLinha++; break;
-        case 'a': case 'A': novaColuna--; break;
-        case 'd': case 'D': novaColuna++; break;
-        default: return 0;
+    switch(direcao) {//verifica a direcao
+        case 'w': case 'W': novaLinha--; break;//cima
+        case 's': case 'S': novaLinha++; break;//baixo
+        case 'a': case 'A': novaColuna--; break;//esquerda
+        case 'd': case 'D': novaColuna++; break;//direita
+        default: return 0;//direcao invalida
     }
 
-    if (novaLinha < 0 || novaLinha > 2 || novaColuna < 0 || novaColuna > 2) return 0;
-
+    if (novaLinha < 0 || novaLinha > 2 || novaColuna < 0 || novaColuna > 2){
+        return 0;//movimento invalido
+    }
     int valorPeca = e->tabuleiro[novaLinha][novaColuna];
     e->tabuleiro[e->vazioX][e->vazioY] = valorPeca;
     e->tabuleiro[novaLinha][novaColuna] = 0;
@@ -69,22 +75,28 @@ int movimentar(Estado *e, char direcao) {
 }
 
 int ehEstadoFinal(Estado *e) {
-    if (!e) return 0;
+    if (!e){//verifica se o estado e nulo
+        return 0;
+    }
     int objetivo[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
     
-    for(int i = 0; i < 3; i++)
-        for(int j = 0; j < 3; j++)
-            if (e->tabuleiro[i][j] != objetivo[i][j]) return 0;
-            
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 3; j++){
+            if (e->tabuleiro[i][j] != objetivo[i][j]){
+                return 0;
+            }
+        }
+    }   
     return 1;
 }
 
 Estado* clonarEstado(Estado *original) {
     Estado *novo = (Estado*) malloc(sizeof(Estado));
-    for(int i=0; i<3; i++)
-        for(int j=0; j<3; j++)
+    for(int i=0; i<3; i++){
+        for(int j=0; j<3; j++){
             novo->tabuleiro[i][j] = original->tabuleiro[i][j];
-            
+        }
+    }
     novo->vazioX = original->vazioX; 
     novo->vazioY = original->vazioY;
     novo->g = original->g; 
@@ -94,15 +106,21 @@ Estado* clonarEstado(Estado *original) {
     return novo;
 }
 
-int estadosSaoIguais(Estado *a, Estado *b) {
-    if (!a || !b) return 0;
-    for(int i=0; i<3; i++)
-        for(int j=0; j<3; j++)
-            if(a->tabuleiro[i][j] != b->tabuleiro[i][j]) return 0;
+int estadosSaoIguais(Estado *a, Estado *b) {//compara dois estados
+    if (!a || !b){
+        return 0;
+    }
+    for(int i=0; i<3; i++){
+        for(int j=0; j<3; j++){
+            if(a->tabuleiro[i][j] != b->tabuleiro[i][j]){
+                return 0;
+            }
+        }
+    }
     return 1;
 }
 
-int calcularHeuristica(Estado *e) {
+int calcularHeuristica(Estado *e) {//heuristica de Manhattan
     int h = 0;
 
     int objetivoPos[9][2] = {
@@ -127,44 +145,47 @@ int calcularHeuristica(Estado *e) {
             }
         }
     }
-    return h;
+    return h;//retorna a soma das distancias
 }
 
-void gerarFilhos(Container *c, Estado *atual) {
+void gerarFilhos(Container *c, Estado *atual) {//gera os estados filhos
     char movimentos[] = {'w', 's', 'a', 'd'};
     
     for(int i=0; i<4; i++) {
         Estado *filho = clonarEstado(atual);
         
-        if (movimentar(filho, movimentos[i])) {
+        if (movimentar(filho, movimentos[i])) {//se o movimento for valido
             filho->g++; 
             
             if (atual->pai != NULL) {
-                if (estadosSaoIguais(filho, atual->pai)) {
+                if (estadosSaoIguais(filho, atual->pai)) {//evita voltar ao estado pai
                     free(filho); 
                     continue;
                 }
             }
             
 
-            adicionarEstado(c, filho);
-        } else {
+            adicionarEstado(c, filho);//adiciona o filho ao container
+        }
+        else {
             free(filho);
         }
     }
 }
 
 void embaralhar(Estado *e, int n) {
-    srand(time(NULL));
+    srand(time(NULL));//inicializa o gerador de numeros aleatorios
     char direcoes[] = {'w', 's', 'a', 'd'};
 
     int resolvido[3][3] = {{1,2,3},{4,5,6},{7,8,0}};
-    for(int i=0; i<3; i++) for(int j=0; j<3; j++) e->tabuleiro[i][j] = resolvido[i][j];
-    e->vazioX = 2; e->vazioY = 2; e->g = 0; e->pai = NULL;
+    for(int i=0; i<3; i++) for(int j=0; j<3; j++){
+        e->tabuleiro[i][j] = resolvido[i][j];
+    }
+        e->vazioX = 2; e->vazioY = 2; e->g = 0; e->pai = NULL;
     
     int movimentosFeitos = 0;
-    while (movimentosFeitos < n) {
-        if (movimentar(e, direcoes[rand() % 4])) {
+    while (movimentosFeitos < n) {//tenta fazer n movimentos validos
+        if (movimentar(e, direcoes[rand() % 4])) {//tenta mover em uma direcao aleatoria
             movimentosFeitos++;
         }
     }

@@ -92,7 +92,7 @@ void exibirModoPesadelo() {
     getchar(); 
 }
 
-int main() {
+int main() {    
     setlocale(LC_ALL, "Portuguese");
     srand(time(NULL));
     int opcao = 0;
@@ -130,7 +130,6 @@ int main() {
 
             while(continuarJogando) {
                 printf("\n  Embaralhando nivel %d... Prepare-se!\n", dificuldadeAtual);
-                for(int k=0; k<100000000; k++);
                 
                 embaralhar(jogo, dificuldadeAtual);
                 
@@ -171,8 +170,9 @@ int main() {
                         
                     printf("\n  W A S D (Mover) | Q (Desistir)\n");
                     
-                    if (vitoriasSeguidas > 0) printf("  COMBO DE VITORIAS: %d \n", vitoriasSeguidas);
-                    
+                    if (vitoriasSeguidas > 0){
+                        printf("  COMBO DE VITORIAS: %d \n", vitoriasSeguidas);
+                    }
                     imprimirEstado(jogo);
                     
                     printf("  Sua jogada >> ");
@@ -185,7 +185,8 @@ int main() {
                             printf("  Fugindo chamuscado para o menu...\n\n");
                             printf("  [PRESSIONE ENTER PARA ACEITAR A DERROTA]");
                             limparBuffer(); getchar();
-                        } else {
+                        }
+                        else {
                             printf("\n  Desistindo...\n"); 
                             for(int k=0; k<300000000; k++); 
                         }
@@ -199,7 +200,8 @@ int main() {
                     
                     if (!movimentar(jogo, jogada)) {
                         printf("\a\n  [OPS] Voce bateu na parede!\n  Pressione ENTER..."); limparBuffer(); getchar();
-                    } else {
+                    }
+                    else {
                         movimentosNaPartida++;
                     }
 

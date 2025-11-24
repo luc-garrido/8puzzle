@@ -153,4 +153,4 @@ _Onde $b$ é o fator de ramificação e $d$ é a profundidade da solução._
     
 *   **Juan cesar marquez** (RA: 25009311)
 
-*   **Lean Gabriel** (RA: xxxxxx)
+*   **Lean Gabriel** (RA: 25896911)

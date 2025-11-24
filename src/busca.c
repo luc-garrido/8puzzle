@@ -11,7 +11,6 @@ void imprimirPecaSimples(int valor) {
 void imprimirCaminhoLadoALado(Estado *final) {
     int profundidade = final->g;
     Estado **historico = (Estado**) malloc(sizeof(Estado*) * (profundidade + 1));
-    
     Estado *temp = final;
     for(int i = profundidade; i >= 0; i--) {
         historico[i] = temp;
@@ -19,6 +18,7 @@ void imprimirCaminhoLadoALado(Estado *final) {
     }
 
     printf("\n=== CAMINHO DA SOLUCAO (%d Passos) ===\n", profundidade);
+
     int blocos = 5;
     for (int i = 0; i <= profundidade; i += blocos) {
         printf("\n");
@@ -41,22 +41,21 @@ void imprimirCaminhoLadoALado(Estado *final) {
     free(historico);
 }
 
-// tipoEstrutura: 1=Pilha, 2=Fila, 3=Fila Prioridade (A*)
 int executarBusca(Estado *inicial, int tipoEstrutura, int limiteProfundidade, int *totalVisitados) {
     Container *c = criarContainer(tipoEstrutura);
-    
     Estado *primeiro = clonarEstado(inicial);
-    // Se for A*, precisamos calcular H e F do estado inicial
+
     if (tipoEstrutura == 3) {
         primeiro->h = calcularHeuristica(primeiro);
         primeiro->f = primeiro->g + primeiro->h;
     }
+
     adicionarEstado(c, primeiro);
     
     while (!containerVazio(c)) {
         Estado *atual = removerEstado(c);
         (*totalVisitados)++;
-        
+
         if (ehEstadoFinal(atual)) {
             system("cls");
             char *nomeAlgo;
@@ -68,36 +67,36 @@ int executarBusca(Estado *inicial, int tipoEstrutura, int limiteProfundidade, in
             printf("Algoritmo...............: %s\n", nomeAlgo);
             printf("Estados visitados.......: %d\n", *totalVisitados);
             printf("Profundidade............: %d passos\n", atual->g);
-            
+
             imprimirCaminhoLadoALado(atual);
+
             return 1;
         }
         
-        if (atual->g < limiteProfundidade) { 
-            // GERAÇÃO DE FILHOS ADAPTADA PARA A*
+        if (atual->g < limiteProfundidade) {
             char movimentos[] = {'w', 's', 'a', 'd'};
+
             for(int i=0; i<4; i++) {
                 Estado *filho = clonarEstado(atual);
                 if (movimentar(filho, movimentos[i])) {
-                    filho->g++; 
-                    // Otimização: Não volta pro pai
+                    filho->g++;
                     if (atual->pai != NULL && estadosSaoIguais(filho, atual->pai)) {
                         free(filho); continue;
                     }
 
-                    // SE FOR A*, CALCULA H e F
                     if (tipoEstrutura == 3) {
                         filho->h = calcularHeuristica(filho);
                         filho->f = filho->g + filho->h;
                     }
-                    
-                    // Adiciona (a estrutura sabe como ordenar se for tipo 3)
+
                     adicionarEstado(c, filho);
-                } else {
+                }
+                else {
                     free(filho);
                 }
             }
-        } else {
+        }
+        else {
             free(atual); 
         }
     }
@@ -110,11 +109,10 @@ void realizarBusca(Estado *inicial, int tipoAlgoritmo) {
 
     if (tipoAlgoritmo == 1) {
         printf("Iniciando Busca em LARGURA (BFS)...\n");
-        executarBusca(inicial, 2, 50, &visitados); // Tipo 2 = Fila
+        executarBusca(inicial, 2, 50, &visitados);
     } 
     else if (tipoAlgoritmo == 2) {
         printf("Iniciando Busca A* (A-Star)...\n");
-        // Tipo 3 = Fila Prioridade. Limite alto pois A* é eficiente.
         executarBusca(inicial, 3, 60, &visitados); 
     }
     else {
@@ -123,7 +121,7 @@ void realizarBusca(Estado *inicial, int tipoAlgoritmo) {
         int achou = 0;
         for (int limite = 1; limite <= limiteMaximo; limite++) {
             printf("Analisando profundidade: %d (Visitados: %d)...\r", limite, visitados);
-            achou = executarBusca(inicial, 1, limite, &visitados); // Tipo 1 = Pilha
+            achou = executarBusca(inicial, 1, limite, &visitados);
             if (achou) break;
         }
         if (!achou) printf("\nLimite maximo atingido sem solucao.\n");

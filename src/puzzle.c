@@ -1,14 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h> // Necessário para abs() na heurística
+#include <math.h>
 #include "puzzle.h"
 
-// --- IMPLEMENTAÇÃO DAS FUNÇÕES DO PUZZLE ---
 
 Estado* criarEstadoInicial() {
     Estado *novo = (Estado*) malloc(sizeof(Estado));
-    // Estado resolvido como base
     int modelo[3][3] = {{1,2,3},{4,5,6},{7,8,0}};
     
     for(int i=0; i<3; i++)
@@ -58,15 +56,12 @@ int movimentar(Estado *e, char direcao) {
         default: return 0;
     }
 
-    // Verifica limites do tabuleiro
     if (novaLinha < 0 || novaLinha > 2 || novaColuna < 0 || novaColuna > 2) return 0;
 
-    // Troca as peças
     int valorPeca = e->tabuleiro[novaLinha][novaColuna];
     e->tabuleiro[e->vazioX][e->vazioY] = valorPeca;
     e->tabuleiro[novaLinha][novaColuna] = 0;
-    
-    // Atualiza coordenadas do vazio
+
     e->vazioX = novaLinha; 
     e->vazioY = novaColuna;
 
@@ -107,21 +102,19 @@ int estadosSaoIguais(Estado *a, Estado *b) {
     return 1;
 }
 
-// --- HEURÍSTICA MANHATTAN (PARA O A*) ---
 int calcularHeuristica(Estado *e) {
     int h = 0;
-    // Posição correta de cada número (0 a 8)
-    // objetivoPos[1] = {0,0} significa que o numero 1 deve estar na linha 0 col 0
+
     int objetivoPos[9][2] = {
-        {2, 2}, // 0
-        {0, 0}, // 1
-        {0, 1}, // 2
-        {0, 2}, // 3
-        {1, 0}, // 4
-        {1, 1}, // 5
-        {1, 2}, // 6
-        {2, 0}, // 7
-        {2, 1}  // 8
+        {2, 2},
+        {0, 0},
+        {0, 1},
+        {0, 2},
+        {1, 0},
+        {1, 1},
+        {1, 2},
+        {2, 0},
+        {2, 1}
     };
 
     for(int i=0; i<3; i++) {
@@ -130,7 +123,6 @@ int calcularHeuristica(Estado *e) {
             if (valor != 0) { 
                 int linhaAlvo = objetivoPos[valor][0];
                 int colAlvo = objetivoPos[valor][1];
-                // Distância = diferença absoluta das linhas + diferença absoluta das colunas
                 h += abs(i - linhaAlvo) + abs(j - colAlvo);
             }
         }
@@ -147,7 +139,6 @@ void gerarFilhos(Container *c, Estado *atual) {
         if (movimentar(filho, movimentos[i])) {
             filho->g++; 
             
-            // Otimização: Não volta pro pai imediato
             if (atual->pai != NULL) {
                 if (estadosSaoIguais(filho, atual->pai)) {
                     free(filho); 
@@ -155,9 +146,7 @@ void gerarFilhos(Container *c, Estado *atual) {
                 }
             }
             
-            // Se for A* (Tipo 3), precisamos do H e F, mas quem chama é o busca.c
-            // Porém, se deixarmos aqui não faz mal.
-            // O importante é que ADICIONAR ESTADO não está implementado aqui, apenas chamado.
+
             adicionarEstado(c, filho);
         } else {
             free(filho);
@@ -168,8 +157,7 @@ void gerarFilhos(Container *c, Estado *atual) {
 void embaralhar(Estado *e, int n) {
     srand(time(NULL));
     char direcoes[] = {'w', 's', 'a', 'd'};
-    
-    // Reseta para resolvido antes de embaralhar
+
     int resolvido[3][3] = {{1,2,3},{4,5,6},{7,8,0}};
     for(int i=0; i<3; i++) for(int j=0; j<3; j++) e->tabuleiro[i][j] = resolvido[i][j];
     e->vazioX = 2; e->vazioY = 2; e->g = 0; e->pai = NULL;

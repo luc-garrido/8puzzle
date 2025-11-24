@@ -2,70 +2,66 @@
 #include <stdlib.h>
 #include "estruturas.h"
 
-// Cria o container (Pode ser PILHA=1 ou FILA=2)
 Container* criarContainer(int tipo) {
     Container *c = (Container*) malloc(sizeof(Container));
     if (c) {
         c->inicio = NULL;
         c->fim = NULL;
         c->tamanho = 0;
-        c->tipo = tipo; // 1=Pilha, 2=Fila
+        c->tipo = tipo;
     }
     return c;
 }
 
-// Verifica se está vazio
 int containerVazio(Container *c) {
-    return (c == NULL || c->inicio == NULL);
+    return (c == NULL || c->inicio == NULL);//retorna 1 se vazio
 }
 
-// Adiciona um estado na estrutura
-// A MÁGICA ACONTECE AQUI:
-// Se for PILHA: Adiciona no INÍCIO (LIFO)
-// Se for FILA:  Adiciona no FIM (FIFO)
-// Substitua a função adicionarEstado no src/estruturas.c
-
 void adicionarEstado(Container *c, Estado *e) {
-    if (!c) return;
+    if (!c)
+    {
+        return;//pare tudo e saia para não dar erro fatal
+    }
 
+    //cria um novo nó
     No *novo = (No*) malloc(sizeof(No));
     novo->estado = e;
     novo->prox = NULL;
 
-    if (c->tipo == 1) { 
-        // --- TIPO 1: PILHA (LIFO) ---
-        novo->prox = c->inicio;
+    if (c->tipo == 1) {
+        novo->prox = c->inicio;//insere no inicio (pilha)
         c->inicio = novo;
-        if (c->fim == NULL) c->fim = novo;
-
-    } else if (c->tipo == 2) { 
-        // --- TIPO 2: FILA (FIFO) ---
+        if (c->fim == NULL){
+            c->fim = novo;
+        }
+    }
+    else if (c->tipo == 2) { 
         if (c->fim != NULL) {
             c->fim->prox = novo;
         }
         c->fim = novo;
-        if (c->inicio == NULL) c->inicio = novo;
-
-    } else {
-        // --- TIPO 3: FILA DE PRIORIDADE (Ordenada por menor F para o A*) ---
-        
-        // Caso 1: Lista vazia ou o novo é menor que o primeiro
+        if (c->inicio == NULL){
+         c->inicio = novo;
+        }
+    }
+    else {
         if (c->inicio == NULL || e->f < c->inicio->estado->f) {
             novo->prox = c->inicio;
             c->inicio = novo;
-            if (c->fim == NULL) c->fim = novo; // Se era vazia, ajusta o fim
-        } else {
-            // Caso 2: Procura a posição correta no meio ou fim
+            if (c->fim == NULL){
+                c->fim = novo;
+            }//vira o primeiro
+        }
+        else {
             No *atual = c->inicio;
-            // Avança enquanto houver próximo e o F do próximo for menor que o F do novo
+
             while (atual->prox != NULL && atual->prox->estado->f <= e->f) {
                 atual = atual->prox;
-            }
-            // Insere depois do 'atual'
-            novo->prox = atual->prox;
-            atual->prox = novo;
-            
-            // Se inseriu no final, atualiza o ponteiro fim
+            }//f menor = mais urgente
+
+            novo->prox = atual->prox;//eu aponto pro cara ruim
+            atual->prox = novo;//o cara bom aponta pra mim
+
             if (novo->prox == NULL) {
                 c->fim = novo;
             }
@@ -74,23 +70,21 @@ void adicionarEstado(Container *c, Estado *e) {
     c->tamanho++;
 }
 
-// Remove um estado da estrutura
-// Para facilitar o laço genérico, SEMPRE removemos do INÍCIO.
-// Na Pilha, removemos quem acabou de entrar (Topo).
-// Na Fila, removemos quem estava esperando há mais tempo (Primeiro).
 Estado* removerEstado(Container *c) {
-    if (containerVazio(c)) return NULL;
+    if (containerVazio(c)){
+        return NULL;
+    }
 
     No *temp = c->inicio;
     Estado *e = temp->estado;
 
-    c->inicio = temp->prox; // Avança o início
+    c->inicio = temp->prox;
     
     if (c->inicio == NULL) {
-        c->fim = NULL; // Se esvaziou, zera o fim também
+        c->fim = NULL;
     }
 
-    free(temp); // Libera o NÓ, mas NÃO o estado (pois vamos usá-lo)
+    free(temp);
     c->tamanho--;
     
     return e;

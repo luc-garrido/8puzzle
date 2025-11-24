@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <ctype.h>
-#include <time.h> // Necessário para o sorteio das frases
+#include <time.h>
 #include "estruturas.h"
 #include "puzzle.h"
 #include "busca.h"
@@ -20,8 +20,7 @@ void limparBuffer() {
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-// --- FRASES DO DRAGÃO ---
-const char *frasesDragao[] = {
+char *frasesDragao[] = {
     "MEU FOGO ESTA MAIS QUENTE QUE SEU RACIOCINIO!",
     "HUMANOS SAO TÃO LENTOS... ESTOU COM FOME!",
     "VOCE CHAMA ISSO DE ESTRATEGIA?",
@@ -67,7 +66,6 @@ void exibirVitoriaEpica(int nivel) {
     printf("  ===================================\n\n");
 }
 
-// --- TELA DE TRANSIÇÃO (DRAGÃO GIGANTE DE CORPO INTEIRO) ---
 void exibirModoPesadelo() {
     limparTela();
     printf("\n");
@@ -96,7 +94,7 @@ void exibirModoPesadelo() {
 
 int main() {
     setlocale(LC_ALL, "Portuguese");
-    srand(time(NULL)); // Inicializa semente aleatória
+    srand(time(NULL));
     int opcao = 0;
 
     do {
@@ -130,27 +128,24 @@ int main() {
             int continuarJogando = 1;
             int vitoriasSeguidas = 0;
 
-            // Loop de Progressão de Níveis
             while(continuarJogando) {
                 printf("\n  Embaralhando nivel %d... Prepare-se!\n", dificuldadeAtual);
-                for(int k=0; k<100000000; k++); // Delay
+                for(int k=0; k<100000000; k++);
                 
                 embaralhar(jogo, dificuldadeAtual);
                 
                 int movimentosNaPartida = 0;
                 int indiceFrase = -1;
 
-                // Loop do Jogo Atual
                 while (1) { 
                     limparTela();
 
-                    // --- VISUAL IN-GAME E PROVOCAÇÕES ---
                     if (dificuldadeAtual >= 80) {
                         printf("  ############################################\n");
                         printf("  #      [!!!] BOSS BATTLE ATIVA [!!!]       #\n");
                         printf("  #      (Nivel %d - O Dragao vigia...)      #\n", dificuldadeAtual);
                         printf("  ############################################\n");
-                        // Arte da Cabeça do Dragão
+
                         printf("                ,     \\    /      , \n");
                         printf("               / \\    )\\__/(     / \\ \n");
                         printf("              /   \\  (_\\  /_)   /   \\ \n");
@@ -158,18 +153,19 @@ int main() {
                         printf("        |             |\\../|              |\n");
                         printf("        |              \\VV/               |\n");
                         
-                        // Lógica da Frase de Zoeira
                         if (movimentosNaPartida > 0 && movimentosNaPartida % 5 == 0) {
-                            indiceFrase = rand() % 10; // Sorteia nova frase a cada 5 movimentos
+                            indiceFrase = rand() % 10;
                         }
                         
                         if (indiceFrase != -1) {
                             printf("\n  >> DRAGAO RUGE: \"%s\"\n", frasesDragao[indiceFrase]);
-                        } else {
+                        }
+                        else {
                             printf("\n  (O Dragao esta te observando em silencio...)\n");
                         }
 
-                    } else {
+                    }
+                    else {
                         printf("  === MODO JOGADOR (Nivel %d) ===\n", dificuldadeAtual);
                     }
                         
@@ -183,13 +179,12 @@ int main() {
                     scanf(" %c", &jogada);
                     jogada = tolower(jogada);
 
-                    // --- DESISTÊNCIA COM ZOEIRA DO DRAGÃO ---
                     if (jogada == 'q') {
                         if (dificuldadeAtual >= 80) {
                             printf("\n  XXX O DRAGAO COSPIU FOGO NA SUA DESISTENCIA! XXX\n");
                             printf("  Fugindo chamuscado para o menu...\n\n");
                             printf("  [PRESSIONE ENTER PARA ACEITAR A DERROTA]");
-                            limparBuffer(); getchar(); // Pausa
+                            limparBuffer(); getchar();
                         } else {
                             printf("\n  Desistindo...\n"); 
                             for(int k=0; k<300000000; k++); 
@@ -205,14 +200,13 @@ int main() {
                     if (!movimentar(jogo, jogada)) {
                         printf("\a\n  [OPS] Voce bateu na parede!\n  Pressione ENTER..."); limparBuffer(); getchar();
                     } else {
-                        movimentosNaPartida++; // Incrementa movimento válido para ativar a zoeira
+                        movimentosNaPartida++;
                     }
 
                     if (ehEstadoFinal(jogo)) {
                         vitoriasSeguidas++;
                         exibirVitoriaEpica(dificuldadeAtual);
-                        
-                        // GATILHO DO BOSS (3 Vitórias)
+
                         if (vitoriasSeguidas == 3 && dificuldadeAtual < 80) {
                             printf("\n  [!!!] VOCE ESTA IMBATIVEL! (3 vitorias seguidas)\n");
                             printf("  O DRAGAO ESTA ACORDANDO... Aceita o desafio? (S/N): ");
@@ -220,7 +214,7 @@ int main() {
                             scanf(" %c", &respBoss);
                             
                             if (tolower(respBoss) == 's') {
-                                exibirModoPesadelo(); // Chama o Dragão Gigante
+                                exibirModoPesadelo();
                                 dificuldadeAtual = 80; 
                                 vitoriasSeguidas = 0;  
                                 break; 
@@ -235,7 +229,8 @@ int main() {
                         
                         if (tolower(resp) == 's') {
                             dificuldadeAtual += 5;
-                        } else {
+                        }
+                        else {
                             continuarJogando = 0;
                         }
                         break; 
@@ -244,8 +239,8 @@ int main() {
             }
             free(jogo);
 
-        } else if (opcao == 2) {
-            // --- MODO IA ---
+        }
+        else if (opcao == 2) {
             limparTela();
             mostrarLogo();
             Estado *problema = criarEstadoInicial();
@@ -268,7 +263,7 @@ int main() {
                 printf("\n  Escolha a Inteligencia:\n");
                 printf("  [1] Busca em Largura (BFS)\n");
                 printf("  [2] A* (A-Star) - O mais rapido!\n");
-                printf("  [3] Busca Prof. Limitada Iterativa (IDDFS)\n");
+                printf("  [3] Busca Profundidade Limitada Iterativa (IDDFS)\n");
                 printf("  [0] Voltar para Menu Principal\n");
                 printf("  >> ");
                 
@@ -278,18 +273,21 @@ int main() {
                 }
                 if (algo == 0) {
                     continuarMesmoTabuleiro = 0; 
-                } else if (algo >= 1 && algo <= 3) {
+                }
+                else if (algo >= 1 && algo <= 3) {
                     realizarBusca(problema, algo);
                     printf("\n  Pressione ENTER para continuar testando...");
                     limparBuffer(); getchar(); 
-                } else {
+                }
+                else {
                     printf("\n  Opcao invalida!\n  Pressione ENTER...");
                     limparBuffer(); getchar();
                 }
             }
             free(problema);
 
-        } else if (opcao != 0) {
+        }
+        else if (opcao != 0) {
             printf("\n  [ERRO] Opcao %d nao existe.\n", opcao);
             printf("  Pressione ENTER...");
             limparBuffer(); getchar();

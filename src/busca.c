@@ -3,7 +3,7 @@
 #include "busca.h"
 #include "puzzle.h"
 
-void imprimirPecaSimples(int valor) {//imprime uma peca sem bordas
+void imprimirPecaSimples(int valor) {
     if (valor == 0) {
         printf(" . ");
     }
@@ -12,7 +12,7 @@ void imprimirPecaSimples(int valor) {//imprime uma peca sem bordas
     }
 }
 
-void imprimirCaminhoLadoALado(Estado *final) {//imprime o caminho da solucao lado a lado
+void imprimirCaminhoLadoALado(Estado *final) {
     int profundidade = final->g;
     Estado **historico = (Estado**) malloc(sizeof(Estado*) * (profundidade + 1));
     Estado *temp = final;
@@ -49,7 +49,7 @@ int executarBusca(Estado *inicial, int tipoEstrutura, int limiteProfundidade, in
     Container *c = criarContainer(tipoEstrutura);
     Estado *primeiro = clonarEstado(inicial);
 
-    if (tipoEstrutura == 3) {//A*
+    if (tipoEstrutura == 3) {
         primeiro->h = calcularHeuristica(primeiro);
         primeiro->f = primeiro->g + primeiro->h;
     }
@@ -131,7 +131,9 @@ void realizarBusca(Estado *inicial, int tipoAlgoritmo) {
         for (int limite = 1; limite <= limiteMaximo; limite++) {
             printf("Analisando profundidade: %d (Visitados: %d)...\r", limite, visitados);
             achou = executarBusca(inicial, 1, limite, &visitados);
-            if (achou) break;
+            if (achou){
+                break;
+            }
         }
         if (!achou) {
             printf("\nLimite maximo atingido sem solucao.\n");

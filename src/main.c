@@ -8,16 +8,15 @@
 #include "busca.h"
 
 void limparTela() {
-    #ifdef _WIN32
         system("cls");
-    #else
-        system("clear");
-    #endif
 }
 
 void limparBuffer() {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    while (c != '\n' && c != EOF) 
+    {
+        c = getchar();
+    }
 }
 
 char *frasesDragao[] = {
@@ -109,7 +108,9 @@ int main() {
         if (scanf("%d", &opcao) != 1) {
             printf("\n  [ERRO] Entrada invalida! Digite apenas numeros.\n");
             printf("  Pressione ENTER para tentar novamente...");
-            limparBuffer(); getchar(); continue;
+            limparBuffer();
+            getchar();
+            continue;
         }
 
         if(opcao == 1) {
@@ -118,7 +119,7 @@ int main() {
             Estado *jogo = criarEstadoInicial();
             char jogada;
             
-            printf("  Digite a Dificuldade Inicial (Ex: 10): ");
+            printf("  Nivel de Caos (Quantas vezes devo embaralhar as pecas?): ");
             int dificuldadeAtual;
             while (scanf("%d", &dificuldadeAtual) != 1 || dificuldadeAtual < 0) {
                 limparBuffer();
@@ -184,22 +185,27 @@ int main() {
                             printf("\n  XXX O DRAGAO COSPIU FOGO NA SUA DESISTENCIA! XXX\n");
                             printf("  Fugindo chamuscado para o menu...\n\n");
                             printf("  [PRESSIONE ENTER PARA ACEITAR A DERROTA]");
-                            limparBuffer(); getchar();
+                            limparBuffer();
+                            getchar();
                         }
                         else {
-                            printf("\n  Desistindo...\n"); 
-                            for(int k=0; k<300000000; k++); 
+                            printf("\n  Desistindo...\n");
                         }
                         continuarJogando = 0; 
                         break;
                     }
 
                     if (jogada != 'w' && jogada != 'a' && jogada != 's' && jogada != 'd') {
-                        printf("\n  [ERRO] Tecla invalida!\n  Pressione ENTER..."); limparBuffer(); getchar(); continue;
+                        printf("\n  [ERRO] Tecla invalida!\n  Pressione ENTER...");
+                        limparBuffer();
+                        getchar();
+                        continue;
                     }
                     
                     if (!movimentar(jogo, jogada)) {
-                        printf("\a\n  [OPS] Voce bateu na parede!\n  Pressione ENTER..."); limparBuffer(); getchar();
+                        printf("\a\n  [OPS] Voce bateu na parede!\n  Pressione ENTER...");
+                        limparBuffer();
+                        getchar();
                     }
                     else {
                         movimentosNaPartida++;
@@ -247,14 +253,16 @@ int main() {
             mostrarLogo();
             Estado *problema = criarEstadoInicial();
             
-            printf("  Dificuldade (Movimentos de embaralhamento): ");
+            printf("  Quantidade de movimentos para embaralhar (Ex: 20): ");
             int n;
             while (scanf("%d", &n) != 1 || n < 0) {
-                limparBuffer(); printf("  Invalido: ");
+                limparBuffer();
+                printf("  Invalido: ");
             }
             embaralhar(problema, n);
-            while(ehEstadoFinal(problema) && n > 0) embaralhar(problema, 1);
-
+            while(ehEstadoFinal(problema) && n > 0){
+                embaralhar(problema, 1);
+            }
             int continuarMesmoTabuleiro = 1;
             while(continuarMesmoTabuleiro) {
                 limparTela();
@@ -271,19 +279,22 @@ int main() {
                 
                 int algo;
                 if (scanf("%d", &algo) != 1) {
-                    limparBuffer(); algo = -1;
+                    limparBuffer();
+                    algo = -1;
                 }
                 if (algo == 0) {
-                    continuarMesmoTabuleiro = 0; 
+                    continuarMesmoTabuleiro = 0;
                 }
                 else if (algo >= 1 && algo <= 3) {
                     realizarBusca(problema, algo);
                     printf("\n  Pressione ENTER para continuar testando...");
-                    limparBuffer(); getchar(); 
+                    limparBuffer();
+                    getchar(); 
                 }
                 else {
                     printf("\n  Opcao invalida!\n  Pressione ENTER...");
-                    limparBuffer(); getchar();
+                    limparBuffer();
+                    getchar();
                 }
             }
             free(problema);
@@ -292,7 +303,8 @@ int main() {
         else if (opcao != 0) {
             printf("\n  [ERRO] Opcao %d nao existe.\n", opcao);
             printf("  Pressione ENTER...");
-            limparBuffer(); getchar();
+            limparBuffer();
+            getchar();
         }
 
     } while(opcao != 0);

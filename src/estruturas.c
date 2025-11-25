@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include "estruturas.h"
 
-Container* criarContainer(int tipo) {
+Container* criarContainer(int tipo)
+{
     Container *c = (Container*) malloc(sizeof(Container));
-    if (c) {
+    if (c)
+    {
         c->inicio = NULL;
         c->fim = NULL;
         c->tamanho = 0;
@@ -13,78 +15,102 @@ Container* criarContainer(int tipo) {
     return c;
 }
 
-int containerVazio(Container *c) {
-    return (c == NULL || c->inicio == NULL);//retorna 1 se vazio
+int containerVazio(Container *c)
+{
+    if (c == NULL || c->inicio == NULL)
+    {
+        return 1;
+    }
+    return 0;
 }
 
-void adicionarEstado(Container *c, Estado *e) {
-    if (!c) {
-        return;//pare tudo e saia para não dar erro fatal
+void adicionarEstado(Container *c, Estado *e)
+{
+    if (!c)
+    {
+        return;
     }
 
-    //cria um novo nó
     No *novo = (No*) malloc(sizeof(No));
     novo->estado = e;
     novo->prox = NULL;
 
-    if (c->tipo == 1) {
-        novo->prox = c->inicio;//insere no inicio (pilha)
+    if (c->tipo == 1)
+    {
+        novo->prox = c->inicio;
         c->inicio = novo;
-        if (c->fim == NULL) {
+        
+        if (c->fim == NULL)
+        {
             c->fim = novo;
         }
     }
-    else if (c->tipo == 2) { 
-        if (c->fim != NULL) {
+
+    else if (c->tipo == 2)
+    { 
+        if (c->fim != NULL)
+        {
             c->fim->prox = novo;
         }
         c->fim = novo;
-        if (c->inicio == NULL){
-         c->inicio = novo;
+        
+        if (c->inicio == NULL)
+        {
+            c->inicio = novo;
         }
     }
-    else {
-        if (c->inicio == NULL || e->f < c->inicio->estado->f) {
+
+    else
+    {
+        if (c->inicio == NULL || e->f < c->inicio->estado->f)
+        {
             novo->prox = c->inicio;
-            c->inicio = novo;//insere no início
-            if (c->fim == NULL){//se for o primeiro
-                c->fim = novo;//seta o fim
-            }//vira o primeiro
+            c->inicio = novo;
+            
+            if (c->fim == NULL)
+            {
+                c->fim = novo;
+            }
         }
-        else {
-            No *atual = c->inicio;//começa do início
+        else
+        {
+            No *atual = c->inicio;
+            while (atual->prox != NULL && atual->prox->estado->f <= e->f)
+            {
+                atual = atual->prox;
+            }
 
-            while (atual->prox != NULL && atual->prox->estado->f <= e->f) {
-                atual = atual->prox;//anda até achar o lugar correto
-            }//f menor = mais urgente
+            novo->prox = atual->prox;
+            atual->prox = novo;
 
-            novo->prox = atual->prox;//eu aponto pro cara ruim
-            atual->prox = novo;//o cara bom aponta pra mim
-
-            if (novo->prox == NULL) {//se for o último
-                c->fim = novo;//atualiza o fim se for o último
+            if (novo->prox == NULL)
+            {
+                c->fim = novo;
             }
         }
     }
-    c->tamanho++;//incrementa o tamanho
+    c->tamanho++;
 }
 
-Estado* removerEstado(Container *c) {//remove o estado conforme a estrutura
-    if (containerVazio(c)){
-        return NULL;//nada pra remover, se vazio
+Estado* removerEstado(Container *c)
+{
+    if (containerVazio(c))
+    {
+        return NULL;
     }
 
-    No *temp = c->inicio;//pega o nó do inicio
-    Estado *e = temp->estado;//pega o estado do nó
+    No *temp = c->inicio;
+    Estado *e = temp->estado;
 
-    c->inicio = temp->prox;//avança o inicio para o próximo nó
+    c->inicio = temp->prox;
     
-    if (c->inicio == NULL) {//se a lista ficou vazia
-        c->fim = NULL;//atualiza o fim também
+    if (c->inicio == NULL)
+    {
+        c->fim = NULL;
     }
 
-    free(temp);//libera o nó removido
-    c->tamanho--;//decrementa o tamanho
+    free(temp);
+    c->tamanho--;
     
-    return e;//retorna o estado removido
+    return e;
 }

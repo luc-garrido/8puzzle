@@ -11,24 +11,27 @@ Manual play (W/A/S/D)
 Modular C code (clear include/ + src/)
 
 Quick start
-gcc src/*.c -I include -o 8puzzle    # build
-./8puzzle                            # run
+
+    gcc src/*.c -I include -o 8puzzle    # build
+    ./8puzzle                            # run
+
 
 Controls
-W  up   | A left | S down | D right | Q quit
 
+    W  up   | A left | S down | D right | Q quit
 Project (core)
-include/    # headers
-src/
-  main.c
-  puzzle.c
-  busca.c
-  estruturas.c
 
+    include/    # headers
+    src/
+        main.c
+        puzzle.c
+        busca.c
+        estruturas.c
 Goal state
-1 2 3
-4 5 6
-7 8 _
+
+    1 2 3
+    4 5 6
+    7 8 _
 
 Note
 
